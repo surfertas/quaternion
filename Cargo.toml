@@ -1,0 +1,11 @@
+[package]
+name = "quaternion"
+version = "0.1.0"
+authors = ["surfertas <tasuku@gmail.com>"]
+
+[lib]
+name = "quaternion"
+path = "src/lib.rs"
+
+[dependencies]
+vecmath = "0.3.0"
