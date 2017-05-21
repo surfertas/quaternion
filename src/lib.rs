@@ -23,7 +23,7 @@ pub fn id<T>() -> Quaternion<T>
     (one, [zero, zero, zero])
 }
 
-/// Quaternion addition
+/// Adds two quaternions.
 #[inline(always)]
 pub fn add<T>(a: Quaternion<T>, b: Quaternion<T>) -> Quaternion<T>
     where T: Float
@@ -36,6 +36,14 @@ pub fn add<T>(a: Quaternion<T>, b: Quaternion<T>) -> Quaternion<T>
     c
 }
 
+/// Scales a quaternion (element-wise) by a scalar
+#[inline(always)]
+pub fn scale<T>(q: Quaternion<T>, t: T) -> Quaternion<T>
+    where T: Float
+{
+    (q.0 * t, [q.1[0] * t, q.1[1] * t, q.1[2] * t])
+}
+
 /// Tests
 #[cfg(test)]
 mod tests {
@@ -46,5 +54,12 @@ mod tests {
         let q0: Quaternion<f64> = id();
         let q1: Quaternion<f64> = (1.0, [1.0, 1.0, 1.0]);
         assert_eq!(add(q0, q1), (2.0, [1.0, 1.0, 1.0]));
+    }
+
+    #[test]
+    fn test_scale() {
+        let q: Quaternion<f64> = id();
+        let t = 5.0;
+        assert_eq!(scale(q, t), (5.0, [0.0, 0.0, 0.0]));
     }
 }
