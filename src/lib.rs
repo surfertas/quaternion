@@ -44,6 +44,14 @@ pub fn scale<T>(q: Quaternion<T>, t: T) -> Quaternion<T>
     (q.0 * t, [q.1[0] * t, q.1[1] * t, q.1[2] * t])
 }
 
+/// Dot product of two quaternions
+pub fn dot<T>(a: Quaternion<T>, b: Quaternion<T>) -> T
+    where T: Float
+{
+    let v_total = a.1[0] * b.1[0] + a.1[1] * b.1[1] + a.1[2] * b.1[2];
+    a.0 * b.0 + v_total
+}
+
 /// Tests
 #[cfg(test)]
 mod tests {
@@ -61,5 +69,12 @@ mod tests {
         let q: Quaternion<f64> = id();
         let t = 5.0;
         assert_eq!(scale(q, t), (5.0, [0.0, 0.0, 0.0]));
+    }
+
+    #[test]
+    fn test_dot() {
+        let q0: Quaternion<f64> = id();
+        let q1: Quaternion<f64> = id();
+        assert_eq!(dot(q0, q1), 1.0);
     }
 }
