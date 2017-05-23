@@ -45,11 +45,25 @@ pub fn scale<T>(q: Quaternion<T>, t: T) -> Quaternion<T>
 }
 
 /// Dot product of two quaternions
+#[inline(always)]
 pub fn dot<T>(a: Quaternion<T>, b: Quaternion<T>) -> T
     where T: Float
 {
     let v_total = a.1[0] * b.1[0] + a.1[1] * b.1[1] + a.1[2] * b.1[2];
     a.0 * b.0 + v_total
+}
+
+/// Multiplies two quaternions
+#[inline(always)]
+pub fn mul<T>(a: Quaternion<T>, b: Quaternion<T>) -> Quaternion<T>
+    where T: Float
+{
+    let mut c: Quaternion<T> = id();
+    c.0 = a.0 * b.0 - a.1[0] * b.1[0] - a.1[1] * b.1[1] - a.1[2] * b.1[2];
+    c.1[0] = a.0 * b.1[0] + a.1[0] * b.0 + a.1[1] * b.1[2] - a.1[2] * b.1[1];
+    c.1[1] = a.0 * b.1[1] - a.1[0] * b.1[2] + a.1[1] * b.0 + a.1[2] * b.1[0];
+    c.1[2] = a.0 * b.1[2] + a.1[0] * b.1[1] - a.1[1] * b.1[0] + a.1[2] * b.0;
+    c
 }
 
 /// Tests
@@ -76,5 +90,21 @@ mod tests {
         let q0: Quaternion<f64> = id();
         let q1: Quaternion<f64> = id();
         assert_eq!(dot(q0, q1), 1.0);
+    }
+
+    #[test]
+    fn test_mul() {
+        use vecmath::vec3_cross as cross;
+        use vecmath::vec3_add as add;
+        use vecmath::vec3_dot as dot;
+        use vecmath::vec3_scale as scale;
+
+        let q0: Quaternion<f64> = (2.0, [1.0, 1.0, 1.0]);
+        let q1: Quaternion<f64> = (3.0, [1.0, 1.0, 1.0]);
+
+        let q: Quaternion<f64> = (q0.0 * q1.0 - dot(q0.1, q1.1),
+                                  add(cross(q0.1, q1.1),
+                                      add(scale(q1.1, q0.0), scale(q0.1, q1.0))));
+        assert_eq!(q, mul(q0, q1));
     }
 }
