@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 
 //! A type agnostic quaternion math library
-// Credit:
+// Reference:
 // https://github.com/PistonDevelopers/quaternion/blob/master/src/lib.rs
 // Note: this implementation tries to avoid the use of the vecmath library.
 
@@ -66,6 +66,23 @@ pub fn mul<T>(a: Quaternion<T>, b: Quaternion<T>) -> Quaternion<T>
     c
 }
 
+/// Takes the quaternion conjugate
+#[inline(always)]
+pub fn conj<T>(a: Quaternion<T>) -> Quaternion<T>
+    where T: Float
+{
+    (a.0, [-a.1[0], -a.1[1], -a.1[2]])
+}
+
+///Computes the square length of a quaternion.
+#[inline(always)]
+pub fn square_len<T>(q: Quaternion<T>) -> T
+    where T: Float
+{
+    q.0 * q.0 + q.1[0] * q.1[0] + q.1[1] * q.1[1] + q.1[2] * q.1[2]
+}
+
+
 /// Tests
 #[cfg(test)]
 mod tests {
@@ -106,5 +123,20 @@ mod tests {
                                   add(cross(q0.1, q1.1),
                                       add(scale(q1.1, q0.0), scale(q0.1, q1.0))));
         assert_eq!(q, mul(q0, q1));
+    }
+
+    #[test]
+    fn test_conj() {
+        let q: Quaternion<f64> = (2.0, [1.0, 1.0, 1.0]);
+        let q_conj: Quaternion<f64> = (2.0, [-1.0, -1.0, -1.0]);
+
+        assert_eq!(q_conj, conj(q));
+    }
+
+    #[test]
+    fn test_square_len() {
+        use vecmath::vec3_square_len;
+        let q: Quaternion<f64> = (2.0, [1.0, 1.0, 1.0]);
+        assert_eq!(q.0 * q.0 + vec3_square_len(q.1), square_len(q));
     }
 }
