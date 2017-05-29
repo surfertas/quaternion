@@ -74,12 +74,30 @@ pub fn conj<T>(a: Quaternion<T>) -> Quaternion<T>
     (a.0, [-a.1[0], -a.1[1], -a.1[2]])
 }
 
-///Computes the square length of a quaternion.
+/// Computes the square length of a quaternion.
 #[inline(always)]
 pub fn square_len<T>(q: Quaternion<T>) -> T
     where T: Float
 {
     q.0 * q.0 + q.1[0] * q.1[0] + q.1[1] * q.1[1] + q.1[2] * q.1[2]
+}
+
+/// Computes the length of a quarternion
+#[inline(always)]
+pub fn len<T>(q: Quaternion<T>) -> T
+    where T: Float
+{
+    square_len(q).sqrt()
+}
+
+/// Rotate the given vector using the given quaternion
+pub fn rotate_vector<T>(q: Quaternion<T>, v: [T; 3]) -> [T; 3]
+    where T: Float
+{
+    let zero = T::zero();
+    let v_as_q: Quaternion<T> = (zero, v);
+    let conj: Quaternion<T> = conj(q);
+    mul(mul(q, v_as_q), conj).1
 }
 
 
