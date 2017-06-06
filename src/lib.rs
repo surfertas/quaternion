@@ -8,6 +8,8 @@
 extern crate vecmath;
 
 use vecmath::traits::Float;
+use std::fmt::Debug;
+
 
 /// Quaternion type alias
 pub type Quaternion<T> = (T, [T; 3]);
@@ -91,6 +93,7 @@ pub fn len<T>(q: Quaternion<T>) -> T
 }
 
 /// Rotate the given vector using the given quaternion
+#[inline(always)]
 pub fn rotate_vector<T>(q: Quaternion<T>, v: [T; 3]) -> [T; 3]
     where T: Float
 {
@@ -100,11 +103,26 @@ pub fn rotate_vector<T>(q: Quaternion<T>, v: [T; 3]) -> [T; 3]
     mul(mul(q, v_as_q), conj).1
 }
 
+/// Constructs a quaternion for a given angle
+#[inline(always)]
+pub fn angle_quaternion<T>(v: [T; 3], theta: T) -> Quaternion<T>
+    where T: Float + Debug
+{
+    use vecmath::vec3_scale as scale;
+
+    let two = T::one() + T::one();
+    let half_theta = theta / two;
+    (half_theta.cos(), scale(v, half_theta.sin()))
+}
+    
 
 /// Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f32::consts::PI;
+    
+    static EPSILON: f32 = 0.00001;
 
     #[test]
     fn test_add() {
@@ -157,4 +175,16 @@ mod tests {
         let q: Quaternion<f64> = (2.0, [1.0, 1.0, 1.0]);
         assert_eq!(q.0 * q.0 + vec3_square_len(q.1), square_len(q));
     }
+
+    #[test]
+    fn test_angle_quaternion() {
+        use vecmath::Vector3;
+        use vecmath::vec3_normalized as normalized;
+        let axis: Vector3<f32> = [1.0, 1.0, 1.0];
+        let q: Quaternion<f32> = angle_quaternion(
+            normalized(axis), 
+            PI
+        );
+        assert!((square_len(q) - 1.0).abs() < EPSILON);
+    }   
 }
