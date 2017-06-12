@@ -105,7 +105,7 @@ pub fn rotate_vector<T>(q: Quaternion<T>, v: [T; 3]) -> [T; 3]
 
 /// Constructs a quaternion for a given angle
 #[inline(always)]
-pub fn angle_quaternion<T>(v: [T; 3], theta: T) -> Quaternion<T>
+pub fn axis_angle<T>(v: [T; 3], theta: T) -> Quaternion<T>
     where T: Float + Debug
 {
     use vecmath::vec3_scale as scale;
@@ -114,7 +114,44 @@ pub fn angle_quaternion<T>(v: [T; 3], theta: T) -> Quaternion<T>
     let half_theta = theta / two;
     (half_theta.cos(), scale(v, half_theta.sin()))
 }
+
+
+/// Construct a quaternion representing the rotation from a to b
+#[inline(always)]
+pub fn rotation_from_to<T>(a: [T; 3], b: [T; 3]) -> Quaternion<T>
+    where T: Float + Debug
+{
+    use std::f64::consts::PI;
+    use vecmath::{vec3_cross, vec3_dot, vec3_square_len, vec3_normalized};
+        
+    let one = T::one();
+    let zero = T::zero();
     
+    let a = vec3_normalized(a);
+    let b = vec3_normalized(b);
+    let dot = vec3_dot(a,b);
+    
+    if dot >= one {
+        // a and b are parallel
+        return id();
+    }
+    
+    if dot < T::from_f64(-0.999999) {
+        let mut axis = vec3_cross([one, zero, zero], a);
+        if vec3_square_len(axis) == zero {
+            axis = vec3_cross([zero, one, zero], a);
+        }
+        axis = vec3_normalized(axis);
+        axis_angle(axis, T::from_f64(PI))
+    } else {
+        let q = (
+            one + dot,
+            vec3_cross(a,b)
+        );
+        scale(q, one / len(q))
+    }
+}
+
 
 /// Tests
 #[cfg(test)]
@@ -177,14 +214,31 @@ mod tests {
     }
 
     #[test]
-    fn test_angle_quaternion() {
+    fn test_axis_angle() {
         use vecmath::Vector3;
         use vecmath::vec3_normalized as normalized;
         let axis: Vector3<f32> = [1.0, 1.0, 1.0];
-        let q: Quaternion<f32> = angle_quaternion(
+        let q: Quaternion<f32> = axis_angle(
             normalized(axis), 
             PI
         );
         assert!((square_len(q) - 1.0).abs() < EPSILON);
     }   
+    
+    #[test]
+    fn test_rotation_from_to_1() {
+        use vecmath::Vector3;
+
+        let a: Vector3<f32> = [1.0, 1.0, 1.0];
+        let b: Vector3<f32> = [-1.0, -1.0, -1.0];
+        
+        let q = rotation_from_to(a, b);
+        let a_prime = rotate_vector(q, a);
+    
+        println!("a_prime = {:?}", a_prime);
+        
+        assert!((a_prime[0] + 1.0).abs() < EPSILON);
+        assert!((a_prime[1] + 1.0).abs() < EPSILON);
+        assert!((a_prime[2] + 1.0).abs() < EPSILON);
+    }
 }
